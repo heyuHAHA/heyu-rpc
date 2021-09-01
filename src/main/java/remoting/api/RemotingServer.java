@@ -1,4 +1,4 @@
-package remoting;
+package remoting.api;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;

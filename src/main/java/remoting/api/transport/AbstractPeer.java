@@ -1,10 +1,10 @@
-package remoting.transport;
+package remoting.api.transport;
 
 import common.URL;
-import remoting.Channel;
-import remoting.ChannelHandler;
-import remoting.EndPoint;
-import remoting.RemotingException;
+import remoting.api.Channel;
+import remoting.api.ChannelHandler;
+import remoting.api.EndPoint;
+import remoting.api.RemotingException;
 
 import java.net.InetSocketAddress;
 
@@ -108,6 +108,10 @@ public abstract class AbstractPeer implements EndPoint, ChannelHandler {
 
     @Override
     public boolean isClosed() {
-        return false;
+        return closed;
+    }
+
+    public boolean isClosing() {
+        return closing && !closed;
     }
 }

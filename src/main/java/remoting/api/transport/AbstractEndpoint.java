@@ -1,11 +1,12 @@
-package remoting.transport;
+package remoting.api.transport;
+
 
 import common.URL;
-import remoting.ChannelHandler;
-import remoting.Codec;
-import remoting.transport.codec.CodecAdapter;
+import remoting.api.ChannelHandler;
+import remoting.api.Codec;
+import remoting.api.transport.codec.CodecAdapter;
 
-public abstract class AbstractEndpoint extends AbstractPeer {
+public abstract class AbstractEndpoint extends AbstractPeer{
 
     private Codec codec;
 

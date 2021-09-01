@@ -1,9 +1,9 @@
-package remoting.transport.codec;
+package remoting.api.transport.codec;
 
 import common.io.UnsafeByteArrayOutputStream;
-import remoting.Channel;
-import remoting.Codec;
-import remoting.buffer.ChannelBuffer;
+import remoting.api.Channel;
+import remoting.api.Codec;
+import remoting.api.buffer.ChannelBuffer;
 
 import java.io.IOException;
 

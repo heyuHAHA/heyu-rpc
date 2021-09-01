@@ -1,8 +1,8 @@
-package remoting.transport;
+package remoting.api.transport;
 
 import common.URL;
-import remoting.Channel;
-import remoting.RemotingException;
+import remoting.api.Channel;
+import remoting.api.RemotingException;
 
 import java.net.InetSocketAddress;
 

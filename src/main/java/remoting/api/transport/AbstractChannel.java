@@ -1,11 +1,9 @@
-package remoting.transport;
+package remoting.api.transport;
 
 import common.URL;
-import remoting.Channel;
-import remoting.ChannelHandler;
-import remoting.RemotingException;
-
-import java.net.InetSocketAddress;
+import remoting.api.Channel;
+import remoting.api.ChannelHandler;
+import remoting.api.RemotingException;
 
 /**
  * 具备Channel的属性管理，以及连接，发送，断开，接收等功能
@@ -22,5 +20,6 @@ public abstract class AbstractChannel extends AbstractPeer implements Channel {
         doSend(message,sent);
     }
 
+    //TODO
     protected abstract void doSend(Object message, boolean sent);
 }

@@ -1,4 +1,4 @@
-package remoting;
+package remoting.api;
 
 public interface ChannelHandler {
 

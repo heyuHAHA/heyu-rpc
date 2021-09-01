@@ -1,4 +1,4 @@
-package remoting;
+package remoting.api;
 
 /**
  * 指示实现（对于服务器和客户端）是否具有感知和处理空闲连接的能力。

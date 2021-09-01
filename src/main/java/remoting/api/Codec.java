@@ -1,6 +1,6 @@
-package remoting;
+package remoting.api;
 
-import remoting.buffer.ChannelBuffer;
+import remoting.api.buffer.ChannelBuffer;
 
 import java.io.IOException;
 

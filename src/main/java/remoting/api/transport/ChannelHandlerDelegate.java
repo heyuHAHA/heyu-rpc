@@ -1,6 +1,6 @@
-package remoting.transport;
+package remoting.api.transport;
 
-import remoting.ChannelHandler;
+import remoting.api.ChannelHandler;
 
 public interface ChannelHandlerDelegate extends ChannelHandler {
     ChannelHandler getHandler();

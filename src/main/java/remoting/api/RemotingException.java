@@ -1,6 +1,6 @@
-package remoting;
+package remoting.api;
 
-import remoting.transport.AbstractChannel;
+import remoting.api.transport.AbstractChannel;
 
 public class RemotingException extends Exception{
 
