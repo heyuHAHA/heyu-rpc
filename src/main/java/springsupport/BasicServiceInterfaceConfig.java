@@ -1,5 +1,6 @@
 package springsupport;
 
+import config.protocol.ProtocolConfig;
 import config.registry.RegistryConfig;
 
 public class BasicServiceInterfaceConfig {
@@ -7,9 +8,22 @@ public class BasicServiceInterfaceConfig {
 
     private String export;
 
-    private String protocol;
 
     private RegistryConfig registryConfig;
+
+    private ProtocolConfig protocolConfig;
+
+    private String id;
+
+    protected String protocolName;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public RegistryConfig getRegistryConfig() {
         return registryConfig;
@@ -35,11 +49,16 @@ public class BasicServiceInterfaceConfig {
         return isDefault;
     }
 
-    public String getProtocol() {
-        return protocol;
+
+    public void setProtocol(ProtocolConfig protocol) {
+        this.protocolConfig = protocol;
     }
 
-    public void setProtocol(String protocol) {
-        this.protocol = protocol;
+    public String getProtocolName() {
+        return protocolName;
+    }
+
+    public void setProtocolName(String protocolName) {
+        this.protocolName = protocolName;
     }
 }

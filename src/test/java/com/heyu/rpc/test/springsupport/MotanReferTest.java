@@ -1,29 +1,36 @@
 package com.heyu.rpc.test.springsupport;
 
 
-import com.heyu.rpc.test.Service;
+import com.heyu.rpc.test.SpringConfigurationBean;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-
-import java.sql.SQLOutput;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import springsupport.AnnotationBean;
+import springsupport.RefererConfigBean;
+import springsupport.annotation.MotanReferer;
 
 public class MotanReferTest {
 
+    private  ApplicationContext applicationContext;
 
-    private Service service;
 
     @Before
-    public void loadSpring() {
-        ClassPathXmlApplicationContext application = new ClassPathXmlApplicationContext("classpath:application-text.xml");
-        Service service = application.getBean("referService",Service.class);
-        Assert.assertNotNull(service);
+    public void setUp() {
+        AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext(SpringConfigurationBean.class);
+        this.applicationContext = applicationContext;
+        Assert.assertNotNull(this.applicationContext);
     }
 
-
     @Test
-    public void test() {
-        System.out.println("hello");
+    public void testReferConfigBean() {
+        AnnotationBean annotationBean = applicationContext.getBean(AnnotationBean.class);
+        Assert.assertNotNull(annotationBean);
+        RefererConfigBean refererConfigBean = annotationBean.getFromMap("/com.heyu.rpc.test.Service:");
+        Assert.assertNotNull(refererConfigBean);
+        Assert.assertNotNull(refererConfigBean.getProtocolConfig());
+        Assert.assertNotNull(refererConfigBean.getRegistryConfig());
+        Assert.assertNotNull(refererConfigBean.getBasicRefererInterfaceConfig());
     }
 }

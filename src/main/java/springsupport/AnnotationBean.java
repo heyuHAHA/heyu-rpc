@@ -1,6 +1,7 @@
 package springsupport;
 
 import cn.hutool.core.collection.ConcurrentHashSet;
+import cn.hutool.core.util.StrUtil;
 import config.ServiceConfig;
 import config.basic.BasicRefererInterfaceConfig;
 import config.protocol.ProtocolConfig;
@@ -9,6 +10,7 @@ import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.beans.factory.BeanInitializationException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -18,6 +20,7 @@ import springsupport.annotation.MotanReferer;
 import springsupport.annotation.MotanService;
 
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Map;
@@ -41,6 +44,8 @@ public class AnnotationBean implements BeanFactoryPostProcessor, BeanPostProcess
      * 把motan指定路径下的class注册到spring容器中
      */
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+        if (StrUtil.isBlank(annotationPackage))
+            return;
        if (beanFactory instanceof BeanDefinitionRegistry) {
            try {
                Class<?> scannerClass = ClassUtils.forName("org.springframework.context.annotation.ClassPathBeanDefinitionScanner",AnnotationBean.class.getClassLoader());
@@ -48,7 +53,7 @@ public class AnnotationBean implements BeanFactoryPostProcessor, BeanPostProcess
                        .newInstance(new Object[]{beanFactory,true});
 
                Method scan = scannerClass.getMethod("scan",new Class[]{String[].class});
-               scan.invoke(scanner, new Object[]{annotationPackages});
+               scan.invoke(scanner, new Object[]{annotationPackage});
            } catch (Throwable e) {
 
            }
@@ -68,20 +73,40 @@ public class AnnotationBean implements BeanFactoryPostProcessor, BeanPostProcess
        if(!isMatchPackage(bean)) {
            return bean;
        }
+
        Class<?> clazz = bean.getClass();
        if (isProxyBean(bean))
            clazz = AopUtils.getTargetClass(bean);
-       Method[] methods = clazz.getMethods();
-       for (Method method : methods) {
-           String name = method.getName();
-           if (name.length() > 3 && name.startsWith("set")
-                   && Modifier.isPublic(method.getModifiers())
-                   && method.getParameterTypes().length == 1
-                   && !Modifier.isStatic(method.getModifiers())
-           ) {
-               MotanReferer reference = method.getAnnotation(MotanReferer.class);
-               if (reference != null) {
-                   Object value = refer(reference,method.getParameterTypes()[0]);
+//       Method[] methods = clazz.getMethods();
+//       for (Method method : methods) {
+//           String name = method.getName();
+//           if (name.length() > 3 && name.startsWith("set")
+//                   && Modifier.isPublic(method.getModifiers())
+//                   && method.getParameterTypes().length == 1
+//                   && !Modifier.isStatic(method.getModifiers())
+//           ) {
+//               MotanReferer reference = method.getAnnotation(MotanReferer.class);
+//               if (reference != null) {
+//                   Object value = refer(reference,method.getParameterTypes()[0]);
+//               }
+//           }
+//       }
+
+        Field[] fields = clazz.getDeclaredFields();
+       for (Field field : fields) {
+//           if (!field.canAccess(null)) {
+//               field.setAccessible(true);
+//           }
+           MotanReferer reference = field.getAnnotation(MotanReferer.class);
+           if (reference != null) {
+               Object value = refer(reference,field.getType());
+               if (value != null) {
+                   try {
+                       field.set(bean,value);
+                   } catch (IllegalAccessException e) {
+//                       throw new BeanInitializationException("Failed to init remote service reference at filed " + field.getName()
+//                               + " in class " + bean.getClass().getName(),e);
+                   }
                }
            }
        }
@@ -178,8 +203,9 @@ public class AnnotationBean implements BeanFactoryPostProcessor, BeanPostProcess
             throw new IllegalArgumentException("The @Reference undefined interfaceName " +referenceClass.getName());
         }
         String key = reference.group() + "/" + interfaceName + ":" + reference.version();
+        System.out.println("key:" + key);
         RefererConfigBean refererConfigBean = refererConfigBeanMap.get(key);
-        if (refererConfigBean != null) {
+        if (refererConfigBean == null) {
             refererConfigBean = new RefererConfigBean();
 
             //refererConfigBean.setBeanFactory(beanFactory);
@@ -229,17 +255,16 @@ public class AnnotationBean implements BeanFactoryPostProcessor, BeanPostProcess
     }
 
     private boolean isMatchPackage(Object bean) {
-        if(annotationPackages == null || annotationPackages.length == 0)
+        if(StrUtil.isBlank(annotationPackage))
             return true;
         Class clazz = bean.getClass();
         if (isProxyBean(bean)) {
             clazz = AopUtils.getTargetClass(bean);
         }
         String beanClassName = clazz.getName();
-        for (String pkg :annotationPackages) {
-            if (beanClassName.startsWith(pkg))
-                return true;
-        }
+        if(beanClassName.startsWith(annotationPackage))
+            return true;
+
         return  false;
     }
 
@@ -258,5 +283,11 @@ public class AnnotationBean implements BeanFactoryPostProcessor, BeanPostProcess
     @Override
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
         this.beanFactory = beanFactory;
+    }
+
+    public RefererConfigBean getFromMap(String key) {
+        if (refererConfigBeanMap.containsKey(key))
+            return refererConfigBeanMap.get(key);
+        return null;
     }
 }

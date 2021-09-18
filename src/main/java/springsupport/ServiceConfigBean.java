@@ -54,7 +54,7 @@ public class ServiceConfigBean<T> extends ServiceConfig<T> implements BeanFactor
         if (StringUtil.isNullOrEmpty(getExport()) && getBasicService() != null) {
             setExport(getBasicService().getExport());
         }
-        if (StrUtil.isEmpty(getBasicService().getProtocol()) && StrUtil.isNotEmpty(getExport())) {
+        if (StrUtil.isEmpty(getBasicService().getProtocolName()) && StrUtil.isNotEmpty(getExport())) {
             String[] export = getExport().split(":");
             if (export.length == 2) {
                 String protocolName = export[0];
@@ -106,4 +106,6 @@ public class ServiceConfigBean<T> extends ServiceConfig<T> implements BeanFactor
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
 
     }
+
+
 }
