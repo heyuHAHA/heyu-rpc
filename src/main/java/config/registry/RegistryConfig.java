@@ -1,5 +1,13 @@
 package config.registry;
 
+import cn.hutool.core.util.StrUtil;
+import exception.HeyuRpcFrameworkException;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Locale;
+import java.util.Map;
+
 public class RegistryConfig {
 
     private String id;
@@ -14,6 +22,40 @@ public class RegistryConfig {
 
     // 注册中心缺省端口
     private Integer port;
+
+    public void appendConfigParams(Map<String,String> parameters) {
+        Method[] methods = this.getClass().getMethods();
+        for (Method method : methods) {
+            try {
+                String name = method.getName();
+                if (isGetConfigMethod(method)) {
+                    int idx = name.startsWith("get") ? 3 : 2;
+                    String key = name.substring(idx, idx + 1).toLowerCase(Locale.ROOT) + name.substring(idx + 1);
+                    Object value = method.invoke(this);
+                    if (value == null || StrUtil.isBlank(String.valueOf(value))) {
+                        continue;
+                    }
+                    parameters.put(key,String.valueOf(value));
+                }
+            } catch (Exception e) {
+                throw new HeyuRpcFrameworkException("Error occurs on when append parameters to Config : " +  this.getClass().getSimpleName() + " , " +  method.getName());
+            }
+        }
+    }
+
+    private boolean isGetConfigMethod(Method method) {
+        boolean checkMethod = (method.getName().startsWith("get") || method.getName().startsWith("is")) && !"isDefault".equals(method.getName())
+                && Modifier.isPublic(method.getModifiers()) && method.getParameterTypes().length == 0
+                && isPrimitive(method.getReturnType());
+
+        return checkMethod;
+
+    }
+
+    private boolean isPrimitive(Class<?> returnType) {
+        return returnType.isPrimitive() || returnType == String.class || returnType == Character.class || returnType == Integer.class || returnType == Short.class
+                || returnType == Long.class || returnType == Float.class || returnType == Double.class || returnType == Byte.class || returnType == Boolean.class;
+    }
 
     public String getId() {
         return id;

@@ -199,7 +199,10 @@ public class AnnotationBean implements BeanFactoryPostProcessor, BeanPostProcess
         String interfaceName;
         if (referenceClass.isInterface()) {
             interfaceName = referenceClass.getName();
-        } else {
+        } else if (!void.class.equals(reference.interfaceClass())) {
+            interfaceName = reference.interfaceClass().getName();
+        }
+        else {
             throw new IllegalArgumentException("The @Reference undefined interfaceName " +referenceClass.getName());
         }
         String key = reference.group() + "/" + interfaceName + ":" + reference.version();
@@ -208,7 +211,14 @@ public class AnnotationBean implements BeanFactoryPostProcessor, BeanPostProcess
         if (refererConfigBean == null) {
             refererConfigBean = new RefererConfigBean();
 
+
             //refererConfigBean.setBeanFactory(beanFactory);
+
+            if (void.class.equals(reference.interfaceClass()) && referenceClass.isInterface()) {
+                refererConfigBean.setInterface(referenceClass);
+            } else if (!void.class.equals(reference.interfaceClass())) {
+                refererConfigBean.setInterface(reference.interfaceClass());
+            }
             if(stringCheckInternal(reference.protocol())) {
                 ProtocolConfig protocolConfig = beanFactory.getBean(reference.protocol(),ProtocolConfig.class);
                 refererConfigBean.setProtocolConfig(protocolConfig);
@@ -245,7 +255,7 @@ public class AnnotationBean implements BeanFactoryPostProcessor, BeanPostProcess
             }
             refererConfigBeanMap.putIfAbsent(key,refererConfigBean);
         }
-        return refererConfigBean;
+        return refererConfigBean.getRef();
     }
 
     private boolean stringCheckInternal(String s) {

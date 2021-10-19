@@ -1,12 +1,28 @@
 package springsupport;
 
+import cluster.Cluster;
+import cluster.support.ClusterSupport;
+import cn.hutool.core.util.StrUtil;
 import config.basic.BasicRefererInterfaceConfig;
+import config.handler.SimpleConfigHandler;
 import config.protocol.ProtocolConfig;
 import config.registry.RegistryConfig;
+import org.apache.log4j.Logger;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.*;
+import registry.RegistryService;
+import rpc.URL;
+import util.UrlUtils;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 
 public class RefererConfigBean<T> implements FactoryBean<T>, BeanFactoryAware, InitializingBean, DisposableBean {
+    private static Logger logger = Logger.getLogger(RefererConfigBean.class);
     protected  ProtocolConfig protocolConfig;
 
     protected BasicRefererInterfaceConfig basicRefererInterfaceConfig;
@@ -15,9 +31,85 @@ public class RefererConfigBean<T> implements FactoryBean<T>, BeanFactoryAware, I
 
     private transient BeanFactory beanFactory;
 
+    private Class<T> interfaceClass;
+
+    private AtomicBoolean initialized = new AtomicBoolean(false);
+
+    private List<ClusterSupport> clusterSupports;
+
+    //解析后的所有注册中心url
+    private List<URL> registryUrls = new ArrayList<>();
+    //注册中心的配置列表
+    private List<RegistryConfig> registries;
+
+
+    private List<ProtocolConfig> protocols;
+
+    private T ref;
+
+    public T getRef() {
+        if (ref == null) {
+            initRef();
+        }
+        return ref;
+    }
+
+    public synchronized void initRef() {
+        if (initialized.get()) {
+            return;
+        }
+        try {
+            interfaceClass = (Class<T>) Class.forName(interfaceClass.getName(),true,Thread.currentThread().getContextClassLoader());
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        //检查类对象和配置的方法是否一致
+        //checkInterfactAndMethods(xxx,xxx)
+
+        clusterSupports = new ArrayList<>(protocols.size());
+        List<Cluster<T>> clusters = new ArrayList<>(protocols.size());
+        String proxy = null;
+        SimpleConfigHandler configHandler = new SimpleConfigHandler();
+
+        //生成注册中心的url到List<URL>中
+        loadRegistryUrls();
+
+    }
+
+    private void loadRegistryUrls() {
+        registryUrls.clear();
+        if (registries != null && !registries.isEmpty()) {
+            for (RegistryConfig config : registries) {
+                String address = config.getAddress();
+                if (StrUtil.isBlank(address)) {
+                    address = "127.0.0.1" + ":" + 0;
+                }
+                Map<String,String> map = new HashMap<>();
+                config.appendConfigParams(map);
+
+                map.put("path", RegistryService.class.getName());
+                map.put("refreshTimestamp",String.valueOf(System.currentTimeMillis()));
+
+                if (!map.containsKey("protocol")) {
+                    logger.error("Found no RPC protocol when loadRegistryUrl : " + this.getClass().getSimpleName() + " : loadRegistryUrls" );
+                }
+                List<URL> urls = UrlUtils.parseURLs(address,map);
+                if (urls != null && !urls.isEmpty()) {
+                    for (URL url : urls) {
+                        registryUrls.add(url);
+                    }
+                }
+
+
+            }
+        }
+
+    }
+
     @Override
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
         this.beanFactory = beanFactory;
+
     }
 
     @Override
@@ -169,5 +261,9 @@ public class RefererConfigBean<T> implements FactoryBean<T>, BeanFactoryAware, I
 
     public void setApplication(String application) {
         this.application = application;
+    }
+
+    public void setInterface(Class<?> referenceClass) {
+
     }
 }

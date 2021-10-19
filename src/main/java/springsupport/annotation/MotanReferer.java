@@ -7,6 +7,8 @@ import java.lang.annotation.*;
 @Target({ElementType.FIELD,ElementType.METHOD})
 public @interface MotanReferer {
 
+
+    Class<?> interfaceClass() default  void.class;
     //分组
     String group() default "";
     //服务版本
