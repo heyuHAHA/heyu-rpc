@@ -29,10 +29,12 @@ public class UrlUtils {
 
             URL u = URL.valueOf(addr);
             u.addParameters(parameters);
+
+
         }
 
 
 
-
+        return registries;
     }
 }
